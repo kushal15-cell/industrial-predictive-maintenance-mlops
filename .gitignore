@@ -5,7 +5,8 @@ __pycache__/
 data/raw/CMAPSSData/
 data/processed/
 models/
-reports/
+reports/*
+!reports/metrics.json
 
 .dvc/cache/
 .dvc/tmp/
