@@ -70,8 +70,23 @@ def train_model():
 
         mlflow.sklearn.log_model(model, "model")
 
+        feature_importance = pd.DataFrame(
+    {
+        "feature": X.columns,
+        "importance": model.feature_importances_,
+    }
+).sort_values(by="importance", ascending=False)
+
+        reports_dir = ROOT_DIR / "reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+
+        feature_importance_path = reports_dir / "feature_importance.csv"
+        feature_importance.to_csv(feature_importance_path, index=False)
+
         model_path = model_dir / "random_forest_rul_model.pkl"
         joblib.dump(model, model_path)
+
+        print(f"Feature importance saved to: {feature_importance_path}")
 
         print("Model training completed")
         print(f"MAE: {mae:.4f}")
