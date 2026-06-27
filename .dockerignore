@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+
+.git/
+.dvc/cache/
+.dvc/tmp/
+
+mlruns/
+mlflow.db
+
+data/raw/CMAPSSData/
+data/processed/train_fd001_processed.csv
+
+models/random_forest_rul_model.pkl
