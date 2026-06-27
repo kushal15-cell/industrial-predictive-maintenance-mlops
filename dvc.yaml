@@ -1,0 +1,35 @@
+stages:
+  prepare_data:
+    cmd: python -m src.create_dataset
+    deps:
+      - src/create_dataset.py
+      - src/data/ingestion.py
+      - src/data/validation.py
+      - src/features/build_features.py
+      - src/config.py
+      - params.yaml
+      - data/raw/CMAPSSData
+    outs:
+      - data/processed/train_fd001_processed.csv
+
+  train_model:
+    cmd: python -m src.models.train_model
+    deps:
+      - src/models/train_model.py
+      - src/config.py
+      - params.yaml
+      - data/processed/train_fd001_processed.csv
+    outs:
+      - models/random_forest_rul_model.pkl
+
+  evaluate_model:
+    cmd: python -m src.evaluation.evaluate_model
+    deps:
+      - src/evaluation/evaluate_model.py
+      - src/config.py
+      - params.yaml
+      - data/processed/train_fd001_processed.csv
+      - models/random_forest_rul_model.pkl
+    metrics:
+      - reports/metrics.json:
+          cache: false

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+data/raw/CMAPSSData/
+data/processed/
+models/
+reports/
+
+.dvc/cache/
+.dvc/tmp/
+
+mlruns/
