@@ -1,0 +1,11 @@
+data:
+  raw_path: data/raw/CMAPSSData
+  processed_path: data/processed
+  file_name: train_FD001.txt
+
+features:
+  rul_clip: 125
+
+model:
+  test_size: 0.2
+  random_state: 42
