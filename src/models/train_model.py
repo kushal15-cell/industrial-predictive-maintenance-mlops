@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import joblib
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -21,7 +23,6 @@ def train_model():
     df = pd.read_csv(data_path)
 
     target = "RUL"
-
     drop_columns = ["RUL", "unit_number"]
 
     X = df.drop(columns=drop_columns)
@@ -34,30 +35,49 @@ def train_model():
         random_state=params["model"]["random_state"],
     )
 
+    n_estimators = params["model"]["n_estimators"]
+    max_depth = params["model"]["max_depth"]
+
     model = RandomForestRegressor(
-        n_estimators=100,
+        n_estimators=n_estimators,
+        max_depth=max_depth,
         random_state=params["model"]["random_state"],
         n_jobs=-1,
     )
 
-    model.fit(X_train, y_train)
+    mlflow.set_experiment(params["mlflow"]["experiment_name"])
 
-    predictions = model.predict(X_test)
+    with mlflow.start_run():
+        mlflow.log_param("model_type", "RandomForestRegressor")
+        mlflow.log_param("n_estimators", n_estimators)
+        mlflow.log_param("max_depth", max_depth)
+        mlflow.log_param("test_size", params["model"]["test_size"])
+        mlflow.log_param("random_state", params["model"]["random_state"])
+        mlflow.log_param("rul_clip", params["features"]["rul_clip"])
 
-    mae = mean_absolute_error(y_test, predictions)
-    mse = mean_squared_error(y_test, predictions)
-    rmse = mse ** 0.5
-    r2 = r2_score(y_test, predictions)
+        model.fit(X_train, y_train)
 
-    print("Model training completed")
-    print(f"MAE: {mae:.4f}")
-    print(f"RMSE: {rmse:.4f}")
-    print(f"R2 Score: {r2:.4f}")
+        predictions = model.predict(X_test)
 
-    model_path = model_dir / "random_forest_rul_model.pkl"
-    joblib.dump(model, model_path)
+        mae = mean_absolute_error(y_test, predictions)
+        mse = mean_squared_error(y_test, predictions)
+        rmse = mse ** 0.5
+        r2 = r2_score(y_test, predictions)
 
-    print(f"Model saved to: {model_path}")
+        mlflow.log_metric("mae", mae)
+        mlflow.log_metric("rmse", rmse)
+        mlflow.log_metric("r2_score", r2)
+
+        mlflow.sklearn.log_model(model, "model")
+
+        model_path = model_dir / "random_forest_rul_model.pkl"
+        joblib.dump(model, model_path)
+
+        print("Model training completed")
+        print(f"MAE: {mae:.4f}")
+        print(f"RMSE: {rmse:.4f}")
+        print(f"R2 Score: {r2:.4f}")
+        print(f"Model saved to: {model_path}")
 
 
 if __name__ == "__main__":

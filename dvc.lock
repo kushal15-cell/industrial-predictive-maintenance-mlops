@@ -8,10 +8,6 @@ stages:
       md5: d837c3a078121f105697ffd3a1dff232.dir
       size: 5744640
       nfiles: 3
-    - path: params.yaml
-      hash: md5
-      md5: c98a6e7262f42e911f0811ed726beef8
-      size: 180
     - path: src/config.py
       hash: md5
       md5: f4300518fa0ecc54fe65f995d73c55f1
@@ -32,6 +28,11 @@ stages:
       hash: md5
       md5: 3589add334cf78c483b814b13380379d
       size: 828
+    params:
+      params.yaml:
+        data.processed_path: data/processed
+        data.raw_path: data/raw/CMAPSSData
+        features.rul_clip: 125
     outs:
     - path: data/processed/train_fd001_processed.csv
       hash: md5
@@ -44,18 +45,23 @@ stages:
       hash: md5
       md5: dc22cf89e21e2d27b31311517c79de6d
       size: 3488311
-    - path: params.yaml
-      hash: md5
-      md5: c98a6e7262f42e911f0811ed726beef8
-      size: 180
     - path: src/config.py
       hash: md5
       md5: f4300518fa0ecc54fe65f995d73c55f1
       size: 259
     - path: src/models/train_model.py
       hash: md5
-      md5: 1d7ff3a7a13eaa622c361c9784c15dcf
-      size: 1649
+      md5: 2a6d8935d49a1b5dc20c00908cccfe1a
+      size: 2534
+    params:
+      params.yaml:
+        data.processed_path: data/processed
+        features.rul_clip: 125
+        mlflow.experiment_name: industrial_predictive_maintenance
+        model.max_depth:
+        model.n_estimators: 100
+        model.random_state: 42
+        model.test_size: 0.2
     outs:
     - path: models/random_forest_rul_model.pkl
       hash: md5
@@ -72,10 +78,6 @@ stages:
       hash: md5
       md5: 35600e0f0df8ddedea42bdb01fc7b981
       size: 89408273
-    - path: params.yaml
-      hash: md5
-      md5: c98a6e7262f42e911f0811ed726beef8
-      size: 180
     - path: src/config.py
       hash: md5
       md5: f4300518fa0ecc54fe65f995d73c55f1
@@ -84,6 +86,11 @@ stages:
       hash: md5
       md5: 6f2525a1fdd196ffef5f8dcea1310998
       size: 1612
+    params:
+      params.yaml:
+        data.processed_path: data/processed
+        model.random_state: 42
+        model.test_size: 0.2
     outs:
     - path: reports/metrics.json
       hash: md5

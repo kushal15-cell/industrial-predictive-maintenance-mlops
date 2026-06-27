@@ -7,8 +7,11 @@ stages:
       - src/data/validation.py
       - src/features/build_features.py
       - src/config.py
-      - params.yaml
       - data/raw/CMAPSSData
+    params:
+      - data.raw_path
+      - data.processed_path
+      - features.rul_clip
     outs:
       - data/processed/train_fd001_processed.csv
 
@@ -17,8 +20,15 @@ stages:
     deps:
       - src/models/train_model.py
       - src/config.py
-      - params.yaml
       - data/processed/train_fd001_processed.csv
+    params:
+      - data.processed_path
+      - model.test_size
+      - model.random_state
+      - model.n_estimators
+      - model.max_depth
+      - features.rul_clip
+      - mlflow.experiment_name
     outs:
       - models/random_forest_rul_model.pkl
 
@@ -27,9 +37,12 @@ stages:
     deps:
       - src/evaluation/evaluate_model.py
       - src/config.py
-      - params.yaml
       - data/processed/train_fd001_processed.csv
       - models/random_forest_rul_model.pkl
+    params:
+      - data.processed_path
+      - model.test_size
+      - model.random_state
     metrics:
       - reports/metrics.json:
           cache: false
