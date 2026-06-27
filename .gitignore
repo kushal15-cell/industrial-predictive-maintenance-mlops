@@ -15,6 +15,7 @@ models/*
 reports/*
 !reports/metrics.json
 !reports/feature_importance.csv
+!reports/model_comparison.csv
 
 # DVC internals
 .dvc/cache/
