@@ -2,13 +2,27 @@
 __pycache__/
 *.pyc
 
+# Data artifacts
 data/raw/CMAPSSData/
-data/processed/
-models/
+data/processed/*
+!data/processed/.gitignore
+
+# Model artifacts
+models/*
+!models/.gitignore
+
+# Reports
 reports/*
 !reports/metrics.json
 
+# DVC internals
 .dvc/cache/
 .dvc/tmp/
 
+# MLflow local runs
 mlruns/
+mlflow.db
+
+# OS/editor files
+.DS_Store
+.vscode/
