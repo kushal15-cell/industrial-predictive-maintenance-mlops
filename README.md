@@ -185,26 +185,17 @@ Models compared:
 
 ## 6. Architecture
 
-The project follows a modular machine learning architecture.
+The project follows a simple production-style ML architecture.
 
 ```mermaid
-flowchart TD
-    A[Raw CMAPSS Data] --> B[Data Ingestion]
-    B --> C[Data Validation]
-    C --> D[Feature Engineering]
-    D --> E[Processed Dataset]
-    E --> F[Model Training]
-    F --> G[Model Evaluation]
-    F --> H[Saved Model Artifact]
-    G --> I[Metrics and Reports]
-    H --> J[Streamlit Dashboard]
-    I --> J
-    J --> K[EDA Page]
-    J --> L[Performance Page]
-    J --> M[Monitoring Page]
-    J --> N[Prediction Page]
-    J --> O[Docker Container]
-    O --> P[Render Deployment]
+flowchart LR
+    A[Raw CMAPSS Data] --> B[Data Processing]
+    B --> C[Model Training]
+    C --> D[Model Evaluation]
+    D --> E[Saved Model]
+    E --> F[Streamlit Dashboard]
+    F --> G[Docker Container]
+    G --> H[Render Deployment]
 ```
 
 ### MLOps Components
@@ -222,35 +213,16 @@ flowchart TD
 
 ## 7. Pipeline
 
-The pipeline is organized into multiple stages.
+The project pipeline is managed using DVC and is divided into three main stages.
 
 ```mermaid
 flowchart TD
-    A[Raw Dataset] --> B[Prepare Data]
-    B --> C[Validate Data]
-    C --> D[Create RUL Target]
-    D --> E[Processed Dataset]
+    A[prepare_data] --> B[train_model]
+    B --> C[evaluate_model]
 
-    E --> F[Train Model]
-    F --> G[Save Model Artifact]
-    F --> H[Save Feature Importance]
-
-    E --> I[Compare Models]
-    I --> J[Save Model Comparison Report]
-
-    G --> K[Evaluate Model]
-    E --> K
-    K --> L[Save Metrics JSON]
-
-    G --> M[Prediction Layer]
-    E --> M
-    L --> N[Dashboard]
-    H --> N
-    J --> N
-    M --> N
-
-    N --> O[Docker Image]
-    O --> P[Render Deployment]
+    A --> D[Processed Dataset]
+    B --> E[Trained Model]
+    C --> F[Metrics Report]
 ```
 
 ### Main Pipeline Stages
