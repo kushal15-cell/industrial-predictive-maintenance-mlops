@@ -14,3 +14,28 @@ model:
 
 mlflow:
   experiment_name: industrial_predictive_maintenance
+
+monitoring:
+  reference_path: monitoring/reference_data.csv
+  production_path: monitoring/production_data.csv
+  report_dir: monitoring/reports
+
+  warning_rul: 30
+  critical_rul: 15
+
+  drift_threshold: 0.30
+  prediction_drift_threshold: 0.30
+
+  performance:
+    rmse_multiplier: 1.25
+    mae_multiplier: 1.25
+
+agent:
+  min_drift_features: 2
+  require_performance_degradation: true
+
+  approval_required: true
+
+  github:
+    workflow: retrain.yml
+    branch: main
