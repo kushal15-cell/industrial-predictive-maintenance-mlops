@@ -22,15 +22,18 @@ def evaluate_model():
     target = "RUL"
     drop_columns = ["RUL", "unit_number"]
 
-    X = df.drop(columns=drop_columns)
-    y = df[target]
+    units = df["unit_number"].unique()
 
-    _, X_test, _, y_test = train_test_split(
-        X,
-        y,
+    _, test_units = train_test_split(
+        units,
         test_size=params["model"]["test_size"],
         random_state=params["model"]["random_state"],
     )
+
+    test_df = df[df["unit_number"].isin(test_units)]
+
+    X_test = test_df.drop(columns=drop_columns)
+    y_test = test_df[target]
 
     model = joblib.load(model_path)
 
