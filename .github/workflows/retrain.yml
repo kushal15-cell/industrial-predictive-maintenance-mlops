@@ -47,9 +47,7 @@ jobs:
         run: |
           dvc repro
 
-      - name: Train model
-        run: |
-          python -m src.models.train_model
+      
 
       - name: Verify model
         run: |
