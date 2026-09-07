@@ -1,4 +1,6 @@
 import json
+import math
+from datetime import datetime, timezone
 
 from src.config import ROOT_DIR, load_params
 
@@ -31,10 +33,8 @@ def load_monitoring_summary():
 
 def get_baseline_metrics():
 
-    return {
-        "mae": 10.8955,
-        "rmse": 16.0202,
-    }
+    with (ROOT_DIR / "reports/metrics.json").open(encoding="utf-8") as stream:
+        return json.load(stream)
 
 
 def evaluate_decision(
@@ -44,6 +44,29 @@ def evaluate_decision(
     params = load_params()
 
     baseline = get_baseline_metrics()
+    problems = []
+    for metric in ("mae", "rmse"):
+        for label, values in (("baseline", baseline), ("current", monitoring_summary.get("performance", {}))):
+            value = values.get(metric)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                problems.append(f"Invalid {label} {metric}.")
+    count = monitoring_summary.get("sample_count")
+    if not isinstance(count, int) or isinstance(count, bool) or count < params["agent"].get("min_samples", 100):
+        problems.append("Insufficient or unknown labeled sample count.")
+    drift = monitoring_summary.get("drifted_feature_count")
+    total = monitoring_summary.get("total_monitored_features")
+    if not isinstance(drift, int) or isinstance(drift, bool) or drift < 0 or not isinstance(total, int) or total < drift:
+        problems.append("Invalid drift feature counts.")
+    try:
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(monitoring_summary["generated_at"])).total_seconds()
+        if age < 0 or age > params["agent"].get("max_evidence_age_hours", 24) * 3600:
+            problems.append("Monitoring evidence is stale or future-dated.")
+    except (KeyError, ValueError, TypeError):
+        problems.append("Monitoring timestamp is missing or invalid.")
+    if problems:
+        return {"decision": "WAIT_FOR_DATA", "retraining_required": False,
+                "reasoning": problems, "evidence": monitoring_summary,
+                "uncertainty": "Evidence validation failed; obtain fresh labeled monitoring data."}
 
     current = monitoring_summary[
         "performance"
@@ -173,7 +196,12 @@ def evaluate_decision(
 
         "reasoning": reasons,
 
+        "uncertainty": "A threshold crossing does not prove retraining will improve the model; candidate evaluation is required.",
         "evidence": {
+            "sample_count": count,
+            "generated_at": monitoring_summary["generated_at"],
+            "window": monitoring_summary.get("window"),
+            "baseline_source": "reports/metrics.json",
 
             "baseline_mae": baseline_mae,
             "current_mae": current_mae,

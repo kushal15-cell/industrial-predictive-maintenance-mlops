@@ -1,0 +1,21 @@
+{
+  "release_kind": "application_update_existing_dvc_snapshot",
+  "model_promotion": false,
+  "tag": "ipmip-ui-2026-09-07",
+  "url": "https://github.com/kushal15-cell/industrial-predictive-maintenance-mlops/releases/download/ipmip-ui-2026-09-07/ipmip-artifacts.zip",
+  "sha256": "589fe01490888b38f52ebcad98f4cdc00c2de4ed3fd03df1e65678d8a06ef0d0",
+  "files": {
+    "models/random_forest_rul_model.pkl": {
+      "sha256": "27fdfc0d85801ec4734d6bdf90cbd4c7ad30d61cc1db8f57c91cc05f4e26f18d"
+    },
+    "data/processed/train_fd001_processed.csv": {
+      "sha256": "19166e5eb4e97a1de8651bf47ea06418427ba59882bac4b6207ecd87e199cec9"
+    },
+    "monitoring/reports/monitoring_summary.json": {
+      "sha256": "233bddeb52054791caf33ae57d2b9772b50824172b51aa2c1f678db587bed2f6"
+    },
+    "monitoring/reports/evidently_raw_result.json": {
+      "sha256": "b550294ddf6ed25d5e0ea81e5434ed6df71dc1c4ca71cf38bde74b48a764ffc8"
+    }
+  }
+}

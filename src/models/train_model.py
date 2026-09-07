@@ -25,15 +25,31 @@ def train_model():
     target = "RUL"
     drop_columns = ["RUL", "unit_number"]
 
-    X = df.drop(columns=drop_columns)
-    y = df[target]
+    # Split by engine instead of individual rows
+    # This prevents records from the same engine appearing
+    # in both training and test datasets.
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
+    units = df["unit_number"].unique()
+
+    train_units, test_units = train_test_split(
+        units,
         test_size=params["model"]["test_size"],
         random_state=params["model"]["random_state"],
     )
+
+    train_df = df[df["unit_number"].isin(train_units)]
+    test_df = df[df["unit_number"].isin(test_units)]
+
+    X_train = train_df.drop(columns=drop_columns)
+    y_train = train_df[target]
+
+    X_test = test_df.drop(columns=drop_columns)
+    y_test = test_df[target]
+
+    print(f"Training engines: {len(train_units)}")
+    print(f"Test engines: {len(test_units)}")
+    print(f"Training rows: {len(train_df)}")
+    print(f"Test rows: {len(test_df)}")
 
     n_estimators = params["model"]["n_estimators"]
     max_depth = params["model"]["max_depth"]
@@ -68,11 +84,11 @@ def train_model():
         mlflow.log_metric("rmse", rmse)
         mlflow.log_metric("r2_score", r2)
 
-        mlflow.sklearn.log_model(model, "model")
+        mlflow.sklearn.log_model(model, name="model")
 
         feature_importance = pd.DataFrame(
     {
-        "feature": X.columns,
+        "feature": X_train.columns,
         "importance": model.feature_importances_,
     }
 ).sort_values(by="importance", ascending=False)

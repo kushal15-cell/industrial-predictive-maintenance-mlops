@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "decision_id": "f0f801158c604bfeb4d78628137ea741",
+  "timestamp": "2026-09-07T10:07:26.646595+00:00",
+  "agent": "industrial_predictive_maintenance_agent",
+  "engine": "threshold_rules_v1",
+  "model_sha256": "27fdfc0d85801ec4734d6bdf90cbd4c7ad30d61cc1db8f57c91cc05f4e26f18d",
+  "policy": {
+    "min_samples": 100,
+    "max_evidence_age_hours": 24,
+    "min_drift_features": 2,
+    "require_performance_degradation": true,
+    "approval_required": true,
+    "github": {
+      "workflow": "retrain.yml",
+      "branch": "main"
+    }
+  },
+  "monitoring_snapshot": {
+    "generated_at": "2026-09-07T10:07:26.643248+00:00",
+    "sample_count": 150,
+    "window": {
+      "kind": "synthetic_batch",
+      "start": null,
+      "end": null
+    },
+    "drifted_feature_count": 2,
+    "total_monitored_features": 25,
+    "performance": {
+      "mae": 13.630278184275182,
+      "rmse": 20.041257724737815
+    }
+  },
+  "decision": {
+    "decision": "RETRAIN_RECOMMENDED",
+    "retraining_required": true,
+    "reasoning": [
+      "2 features show significant drift.",
+      "Model performance has degraded beyond the configured threshold."
+    ],
+    "uncertainty": "A threshold crossing does not prove retraining will improve the model; candidate evaluation is required.",
+    "evidence": {
+      "sample_count": 150,
+      "generated_at": "2026-09-07T10:07:26.643248+00:00",
+      "window": {
+        "kind": "synthetic_batch",
+        "start": null,
+        "end": null
+      },
+      "baseline_source": "reports/metrics.json",
+      "baseline_mae": 10.895506142506141,
+      "current_mae": 13.630278184275182,
+      "mae_threshold": 13.619382678132677,
+      "baseline_rmse": 16.020190027768038,
+      "current_rmse": 20.041257724737815,
+      "rmse_threshold": 20.025237534710048,
+      "drifted_feature_count": 2,
+      "minimum_drift_features": 2
+    }
+  },
+  "lifecycle": [
+    {
+      "timestamp": "2026-09-07T10:07:26.748058+00:00",
+      "status": "RECOMMENDED"
+    },
+    {
+      "timestamp": "2026-09-07T10:07:26.748079+00:00",
+      "status": "APPROVED",
+      "actor": "simulated reviewer"
+    },
+    {
+      "timestamp": "2026-09-07T10:07:26.748082+00:00",
+      "status": "PROMOTION_BLOCKED",
+      "promotion": "NOT_PROMOTED",
+      "gate": {
+        "eligible": false,
+        "reason": "Lower RMSE and no MAE regression required.",
+        "incumbent": {
+          "mae": 10,
+          "rmse": 16
+        },
+        "candidate": {
+          "mae": 11,
+          "rmse": 17
+        }
+      }
+    }
+  ],
+  "scenario": "INJECTED TEST: borderline recommendation, worse candidate"
+}

@@ -31,6 +31,8 @@ monitoring:
     mae_multiplier: 1.25
 
 agent:
+  min_samples: 100
+  max_evidence_age_hours: 24
   min_drift_features: 2
   require_performance_degradation: true
 

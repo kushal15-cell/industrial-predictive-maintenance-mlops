@@ -80,6 +80,27 @@ st.markdown(
     """
 )
 
+import json
+import sys
+sys.path.insert(0, str(ROOT_DIR))
+from src.monitoring.drift_details import drift_details
+st.subheader("Latest saved Evidently evaluation")
+st.caption("Batch snapshot, not live telemetry. Charts below are a separate historical simulation.")
+report_dir = ROOT_DIR / "monitoring/reports"
+try:
+    summary = json.loads((report_dir / "monitoring_summary.json").read_text(encoding="utf-8"))
+    st.write(f"Generated: {summary.get('generated_at', 'Unknown')} | Labeled rows: {summary.get('sample_count', 'Unknown')}")
+    st.write(f"Features flagged: {summary.get('drifted_feature_count', 'Unknown')} of {summary.get('total_monitored_features', 'Unknown')}")
+    raw_path = report_dir / "evidently_raw_result.json"
+    if summary.get("feature_drift"):
+        st.dataframe(pd.DataFrame(summary["feature_drift"]), use_container_width=True)
+        st.caption("Scores are method-specific distances or p-values, not percentages; compare each score with its own threshold.")
+    elif raw_path.exists():
+        st.dataframe(pd.DataFrame(drift_details(json.loads(raw_path.read_text(encoding="utf-8")))), use_container_width=True)
+        st.caption("Scores are method-specific distances or p-values, not percentages. Compare each with its own threshold. Raw report and summary are separate saved files and may differ in freshness.")
+except (OSError, ValueError) as error:
+    st.info(f"Saved drift evidence unavailable: {error}")
+
 df = load_data()
 model = load_model()
 

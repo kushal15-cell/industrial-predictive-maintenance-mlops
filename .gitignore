@@ -28,3 +28,6 @@ mlflow.db
 # OS/editor files
 .DS_Store
 .vscode/
+.env
+.env.*
+!.env.example

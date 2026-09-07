@@ -1,60 +1,90 @@
 name: Model Retraining
+run-name: Retrain ${{ inputs.decision_id }}
 
 on:
   workflow_dispatch:
     inputs:
+      decision_id:
+        description: "Decision trace ID (or manual review ticket)"
+        required: true
       reason:
         description: "Reason for retraining"
         required: true
-        default: "MLOps agent recommendation"
-      approved:
-        description: "Human approval"
+      incumbent_sha256:
+        description: "SHA-256 of the incumbent reviewed for this decision"
         required: true
+      approved:
+        description: "Human approval to train; does not authorize deployment"
+        required: true
+        default: "false"
         type: choice
-        options:
-          - "true"
-          - "false"
+        options: ["false", "true"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-retraining
+  cancel-in-progress: false
 
 jobs:
-
   retrain:
-
-    if: ${{ github.event.inputs.approved == 'true' }}
-
+    if: ${{ inputs.approved == 'true' }}
     runs-on: ubuntu-latest
-
+    timeout-minutes: 90
     steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
+        run: pip install -r requirements.txt 'dvc[gdrive]'
+      - name: Reliability tests
+        run: python -m unittest discover -s tests -v
+      - name: Restore versioned incumbent and training data
+        env:
+          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
+        run: dvc pull -r gdrive_remote models/random_forest_rul_model.pkl data/processed/train_fd001_processed.csv
+      - name: Train isolated candidate and evaluate promotion gate
+        env:
+          DECISION_ID: ${{ inputs.decision_id }}
+          INCUMBENT_SHA256: ${{ inputs.incumbent_sha256 }}
+        run: python -m src.agent.retrain --decision-id "$DECISION_ID" --expected-incumbent "$INCUMBENT_SHA256"
+      - name: Record workflow outcome even if setup or training failed
+        if: always()
+        env:
+          DECISION_ID: ${{ inputs.decision_id }}
+          JOB_STATUS: ${{ job.status }}
+          REVIEW_REASON: ${{ inputs.reason }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Show retraining reason
-        run: |
-          echo "Retraining reason:"
-          echo "${{ github.event.inputs.reason }}"
-
-      - name: Run DVC pipeline
-        run: |
-          dvc repro
-
-      
-
-      - name: Verify model
-        run: |
-          test -f models/random_forest_rul_model.pkl
-
-      - name: Upload model artifact
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          result = Path('retraining-result')
+          result.mkdir(exist_ok=True)
+          (result / 'workflow.json').write_text(json.dumps({
+              'decision_id': os.environ['DECISION_ID'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'run_url': os.environ['GITHUB_SERVER_URL'] + '/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+              'status': os.environ['JOB_STATUS'],
+              'approval_actor': os.environ['GITHUB_ACTOR'],
+              'reason': os.environ['REVIEW_REASON'],
+              'promotion': 'NOT_PROMOTED'
+          }, indent=2))
+          PY
+      - name: Preserve evaluation and failure records
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: retrained-model
-          path: models/random_forest_rul_model.pkl
+          name: retraining-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            retraining-result/*.json
+            retraining-result/*.log
+      - name: Upload eligible candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eligible-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: retraining-result/candidate.pkl
+          if-no-files-found: ignore

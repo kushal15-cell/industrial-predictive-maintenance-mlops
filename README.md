@@ -302,3 +302,13 @@ Future improvements include:
 * CI/CD pipeline,
 * cloud DVC remote,
 * and model registry integration.
+
+
+## Agent reliability
+
+The agent now retains evidence and decision history, abstains on insufficient or stale evidence, records human approval, and evaluates isolated retraining candidates before making them eligible for deployment review. See [the reliability guide](docs/agent-reliability.md) for commands, CI setup, limitations, and the injected borderline wrong-call example.
+
+
+## Interpretability and reviewed deployment
+
+Prediction explanations, saved Evidently evidence, readable agent history, and separate API/frontend deployment instructions are described in [the deployment guide](docs/deployment.md). No confidence interval is shown without calibration.

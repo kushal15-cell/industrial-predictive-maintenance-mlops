@@ -1,0 +1,47 @@
+name: Deploy reviewed release
+on:
+  push:
+    branches: [main]
+    paths: ['release/approved.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: render-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt 'dvc[gdrive]'
+      - run: python -m unittest discover -s tests -v
+      - name: Restore reviewed release
+        env:
+          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
+        run: dvc pull -r gdrive_remote models/random_forest_rul_model.pkl data/processed/train_fd001_processed.csv
+      - name: Validate candidate and deployment approval
+        run: python -m src.agent.release release/approved.json
+      - name: Request deployment of this exact commit
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          python - <<'PY'
+          import os, urllib.parse, urllib.request
+          hook = os.environ['RENDER_DEPLOY_HOOK']
+          parsed = urllib.parse.urlsplit(hook)
+          if parsed.scheme != 'https' or parsed.hostname != 'api.render.com':
+              raise SystemExit('Configure a valid Render deploy hook')
+          query = dict(urllib.parse.parse_qsl(parsed.query))
+          query['ref'] = os.environ['GITHUB_SHA']
+          url = urllib.parse.urlunsplit(parsed._replace(query=urllib.parse.urlencode(query)))
+          try:
+              with urllib.request.urlopen(urllib.request.Request(url, method='POST'), timeout=30) as response:
+                  print('Deployment requested; check Render for health and completion.')
+          except Exception:
+              raise SystemExit('Deploy request failed; inspect Render before retrying')
+          PY

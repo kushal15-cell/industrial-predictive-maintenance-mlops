@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      PORT: "8000"
+      APPROVED_MODEL_SHA256: ${APPROVED_MODEL_SHA256:-}
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  frontend:
+    build: .
+    environment:
+      PORT: "8501"
+    ports: ["8501:8501"]

@@ -10,3 +10,10 @@ mlruns/
 mlflow.db
 
 data/raw/CMAPSSData/
+.env
+.env.*
+
+models/
+data/processed/
+monitoring/
+reports/ipmip-artifacts.zip

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 import pandas as pd
 
@@ -12,6 +13,7 @@ from sklearn.metrics import (
 )
 
 from src.config import ROOT_DIR, load_params
+from src.monitoring.drift_details import drift_details
 
 
 def load_monitoring_data():
@@ -221,75 +223,10 @@ def find_drift_count(result):
 
     return 0
 
-def extract_drifted_features(
-    result,
-    feature_columns,
-):
-    """
-    Extract individual drifted feature names.
+def extract_drifted_features(result, feature_columns):
+    return sorted(row['Feature'] for row in drift_details(result)
+                  if row['Feature'] in feature_columns and row['Status'] == 'Drift detected')
 
-    Evidently's ValueDrift metrics contain:
-        - column name
-        - drift score
-        - configured threshold
-
-    A feature is considered drifted when:
-        drift score > threshold
-    """
-
-    drifted_features = []
-
-    metrics = result.get("metrics", [])
-
-    for metric in metrics:
-
-        metric_type = str(
-            metric.get(
-                "config",
-                {}
-            ).get(
-                "type",
-                ""
-            )
-        )
-
-        if "ValueDrift" not in metric_type:
-            continue
-
-        config = metric.get(
-            "config",
-            {}
-        )
-
-        feature = config.get(
-            "column"
-        )
-
-        threshold = config.get(
-            "threshold"
-        )
-
-        value = metric.get(
-            "value"
-        )
-
-        if (
-            feature in feature_columns
-            and
-            isinstance(value, (int, float))
-            and
-            isinstance(threshold, (int, float))
-            and
-            value > threshold
-        ):
-
-            drifted_features.append(
-                feature
-            )
-
-    return sorted(
-        drifted_features
-    )
 
 def extract_drift_summary(
     evaluation,
@@ -326,6 +263,10 @@ def extract_drift_summary(
     )
 
     summary = {
+        "feature_drift": drift_details(result),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "sample_count": int(len(production)),
+        "window": {"kind": "batch", "start": None, "end": None},
         "drift_detected": (
             drift_count > 0
         ),
