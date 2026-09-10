@@ -37,6 +37,14 @@ async def lifespan(app):
 app = FastAPI(title='IPMIP prediction service', lifespan=lifespan)
 
 
+@app.get('/')
+def about():
+    return {'service': 'IPMIP prediction API', 'health': '/health', 'prediction': '/predict',
+            'app': 'https://industrial-predictive-maintenance-mlops.onrender.com',
+            'monitor': os.getenv('SENTINEL_URL'),
+            'notice': 'Portfolio model serving API. Sentinel probes use a fixed public NASA observation; not live industrial sensor traffic.'}
+
+
 class PredictionRequest(BaseModel):
     features: dict[str, float] = Field(description='One observation, using the model feature schema')
 
